@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>منصة المعلم/الطالب — مع إدارة كلمات السر (مخفية)</title>
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      color: #111;
+      direction: rtl
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 22px auto;
+      padding: 0
+    }
+
+    header {
+      background: #0a4ca3;
+      color: #fff;
+      padding: 14px;
+      border-radius: 10px 10px 0 0;
+      text-align: center
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px
+    }
+
+    .page {
+      display: none;
+      background: #fff;
+      padding: 18px;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .06)
+    }
+
+    .active {
+      display: block
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 12px
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 18px;
+      border: 1px solid #e6eefc;
+      cursor: pointer;
+      min-width: 220px;
+      text-align: center
+    }
+
+    .btn {
+      background: #0a4ca3;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 0;
+      cursor: pointer
+    }
+
+    .btn.ghost {
+      background: #fff;
+      color: #0a4ca3;
+      border: 1px solid rgba(10, 80, 200, .12)
+    }
+
+    input[type=text],
+    input[type=password],
+    input[type=number],
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 8px;
+      box-sizing: border-box
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600
+    }
+
+    img.avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 8px
+    }
+
+    .small {
+      font-size: 13px;
+      color: #666
+    }
+
+    .error {
+      color: #b71c1c;
+      margin-top: 8px
+    }
+
+    .pwList {
+      background: #eef6ff;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+      max-height: 260px;
+      overflow: auto
+    }
+
+    .pwItem {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px;
+      border-bottom: 1px dashed #dceefe
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>📘 منصه المعلم عاطف</h1>
+    </header>
+
+    <!-- اختيار الدور -->
+    <div id="rolePage" class="page active">
+      <p class="small"> للبدء</p>
+      <div class="row">
+        <div class="card" onclick="selectRole('teacher')">👨‍🏫 أنا معلم</div>
+        <div class="card" onclick="selectRole('student')">👩‍🎓 أنا طالب</div>
+        <div class="card" onclick="goToAdminAuth()">🛠️ إدارة كلمات السر</div>
+      </div>
+    </div>
+
+    <!-- دخول المعلم -->
+    <div id="teacherLoginPage" class="page">
+      <h2>تسجيل دخول — المعلم</h2>
+      <p class="small">أدخل كلمة سر المعلم (المعطي لك من الإدارة).</p>
+      <input id="teacherLoginPwd" type="password" placeholder="كلمة سر المعلم">
+      <div class="row">
+        <button class="btn" onclick="loginTeacher()">دخول</button>
+        <button class="btn ghost" onclick="goBack()">الرجوع</button>
+      </div>
+      <div id="teacherLoginMsg" class="error"></div>
+      <!-- ملاحظة: قائمة كلمات المعلمين لا تُعرض هنا — تظهر فقط في صفحة الإدارة المحمية -->
+    </div>
+
+    <!-- نموذج بيانات المعلم بعد الدخول -->
+    <div id="teacherInfoPage" class="page">
+      <h2>بيانات المعلم</h2>
+      <div class="small">املأ بياناتك. ستُحفظ محليًا في المتصفح.</div>
+
+      <label>الاسم</label>
+      <input id="t_name" type="text" placeholder="الاسم">
+
+      <label>المادة</label>
+      <input id="t_subject" type="text" placeholder="المادة">
+
+      <label>الصورة</label>
+      <input id="t_image_file" type="file" accept="image/*" onchange="previewTeacherImage(event)">
+      <img id="t_image_preview" class="avatar" src="" style="display:none">
+
+      <label>الرقم السري الخاص بك (للاستخدام الداخلي)</label>
+      <input id="t_personal_pwd" type="password" placeholder="رقم سري خاص بك">
+
+      <div class="row">
+        <button class="btn" onclick="saveTeacherInfo()">حفظ البيانات والدخول</button>
+        <button class="btn ghost" onclick="skipTeacherInfo()">تخطي (إذا محفوظ مسبقاً)</button>
+      </div>
+      <div id="teacherInfoMsg" class="small" style="margin-top:8px;color:green"></div>
+    </div>
+
+    <!-- صفحة المعلم الرئيسية -->
+    <div id="teacherMainPage" class="page">
+      <h2 id="teacherWelcome">مرحبا يا معلم</h2>
+      <div class="row">
+        <div class="card" onclick="goPage('teacherLessonEditor')">📘 الشرح</div>
+        <div class="card" onclick="goPage('teacherQuestionEditor')">❓ الأسئلة</div>
+        <div class="card" onclick="logout()">🔓 تسجيل خروج</div>
+      </div>
+    </div>
+
+    <!-- محرر الشرح -->
+    <div id="teacherLessonEditor" class="page">
+      <h2>تحرير الشرح</h2>
+      <label>نص الشرح</label>
+      <textarea id="lesson_text" placeholder="اكتب الشرح هنا..."></textarea>
+      <label>رابط فيديو (يوتيوب أو رابط آخر)</label>
+      <input id="lesson_video" type="text" placeholder="https://...">
+      <div class="row">
+        <button class="btn" onclick="saveLesson()">💾 حفظ الشرح</button>
+        <button class="btn ghost" onclick="goPage('teacherMainPage')">🔙 رجوع</button>
+      </div>
+      <div id="lessonSaveMsg" class="small" style="color:green;margin-top:8px"></div>
+    </div>
+
+    <!-- محرر الأسئلة -->
+    <div id="teacherQuestionEditor" class="page">
+      <h2>تحرير الأسئلة</h2>
+      <div class="small">أضف سؤالاً جديداً. يمكنك إضافة عدة أسئلة واحداً تلو الآخر.</div>
+
+      <label>نص السؤال</label>
+      <textarea id="q_text" placeholder="نص السؤال"></textarea>
+
+      <label>الاختيارات</label>
+      <input id="q_opt1" type="text" placeholder="اختيار 1">
+      <input id="q_opt2" type="text" placeholder="اختيار 2">
+      <input id="q_opt3" type="text" placeholder="اختيار 3">
+      <input id="q_opt4" type="text" placeholder="اختيار 4">
+
+      <label>الإجابة الصحيحة (1-4)</label>
+      <input id="q_correct" type="number" min="1" max="4" value="1">
+
+      <label>لماذا هذه صحيحة؟ (السبب)</label>
+      <textarea id="q_reason" placeholder="اكتب سبب كون هذه الإجابة صحيحة"></textarea>
+
+      <div class="row">
+        <button class="btn" onclick="addQuestion()">➕ إضافة سؤال وحفظ</button>
+        <button class="btn ghost" onclick="goPage('teacherMainPage')">🔙 رجوع</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">الأسئلة المحفوظة (محلياً):</div>
+        <div id="teacherQuestionsList" class="pwList"></div>
+        <div style="margin-top:8px">
+          <button class="btn ghost" onclick="clearQuestions()">مسح كل الأسئلة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- تسجيل دخول الطالب -->
+    <div id="studentLoginPage" class="page">
+      <h2>تسجيل دخول — الطالب</h2>
+      <p class="small">أدخل كلمة سر الطالب (المولدة من الإدارة أو الافتراضية).</p>
+      <input id="studentPwdInput" type="password" placeholder="كلمة سر الطالب">
+      <div class="row">
+        <button class="btn" onclick="loginStudent()">دخول</button>
+        <button class="btn ghost" onclick="goBack()">الرجوع</button>
+      </div>
+      <div id="studentLoginMsg" class="error"></div>
+      <!-- ملاحظة: قائمة كلمات الطلاب لا تظهر هنا -->
+    </div>
+
+    <!-- صفحة الطالب الرئيسية -->
+    <div id="studentMainPage" class="page">
+      <h2>مرحبا — الطالب</h2>
+      <div class="row">
+        <div class="card" onclick="goPage('studentLessonView')">📘 الشرح</div>
+        <div class="card" onclick="goPage('studentQuestionView')">❓ الأسئلة</div>
+        <div class="card" onclick="logout()">🔓 تسجيل خروج</div>
+      </div>
+    </div>
+
+    <!-- عرض الشرح للطالب -->
+    <div id="studentLessonView" class="page">
+      <h2>الشرح</h2>
+      <div id="studentLessonContent" style="text-align:right"></div>
+      <div class="row">
+        <button class="btn ghost" onclick="goPage('studentMainPage')">🔙 رجوع</button>
+      </div>
+    </div>
+
+    <!-- عرض الأسئلة للطالب -->
+    <div id="studentQuestionView" class="page">
+      <h2>الأسئلة</h2>
+      <div id="studentQuestionsContainer"></div>
+      <div class="row">
+        <button class="btn ghost" onclick="goPage('studentMainPage')">🔙 رجوع</button>
+      </div>
+    </div>
+
+    <!-- صفحة إدارة (مطلوية بكلمة 8989) -->
+    <div id="adminAuthPage" class="page">
+      <h2>دخول لوحة الإدارة</h2>
+      <p class="small">أدخل كلمة سر لوحة الإدارة</p>
+      <input id="adminPwdInput" type="password" placeholder="كلمة سر الإدارة">
+      <div class="row">
+        <button class="btn" onclick="enterAdmin()">دخول</button>
+        <button class="btn ghost" onclick="goBack()">الرجوع</button>
+      </div>
+      <div id="adminAuthMsg" class="error"></div>
+    </div>
+
+    <!-- لوحة الإدارة (تظهر فيها قوائم كلمات السر فقط هنا) -->
+    <div id="adminPage" class="page">
+      <h2>لوحة إدارة كلمات السر</h2>
+      <div class="small">توليد كلمات سر جديدة للمعلمين والطلاب وتخزينها في المتصفح.</div>
+
+      <label>طول الكلمة</label>
+      <input id="admin_pwd_length" type="number" value="8" min="4" max="12">
+      <label>عدد الكلمات المطلوب توليدها</label>
+      <input id="admin_pwd_count" type="number" value="1" min="1" max="50">
+
+      <div class="row">
+        <button class="btn" onclick="adminGenerate('teacher')">توليد كلمات للمعلم</button>
+        <button class="btn" onclick="adminGenerate('student')">توليد كلمات للطالب</button>
+        <button class="btn ghost" onclick="adminClearAll()">مسح قوائم كلمات السر</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <strong>قائمة معلميـن:</strong>
+        <div id="adminTeacherList" class="pwList"></div>
+        <strong style="margin-top:8px">قائمة طلاب:</strong>
+        <div id="adminStudentList" class="pwList"></div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost" onclick="goPage('rolePage')">العودة لواجهة المستخدم</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ---------- إعداد التخزين والقيم الافتراضية ---------- */
+    const ADMIN_INTERNAL_PASSWORD = "8989";
+    const STORAGE = {
+      teacherPwds: 'teacherPwds_v6',
+      studentPwds: 'studentPwds_v6',
+      teacherInfo: 'teacherInfo_v1',
+      lesson: 'lessonData_v1',
+      questions: 'questionsData_v1'
+    };
+
+    /* توليد قيم افتراضية أول مرة */
+    if (!localStorage.getItem(STORAGE.teacherPwds)) localStorage.setItem(STORAGE.teacherPwds, JSON.stringify(["12345678"]));
+    if (!localStorage.getItem(STORAGE.studentPwds)) localStorage.setItem(STORAGE.studentPwds, JSON.stringify(["87654321"]));
+
+    /* ---------- تنقل بين صفحات ---------- */
+    function selectRole(role) {
+      sessionStorage.setItem('role', role);
+      if (role === 'teacher') goPage('teacherLoginPage'); else goPage('studentLoginPage');
+    }
+    function goBack() { goPage('rolePage'); }
+    function goPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      // تحميل بيانات حسب الصفحة
+      if (id === 'studentLessonView') loadLessonForStudent();
+      if (id === 'studentQuestionView') loadQuestionsForStudent();
+      if (id === 'teacherQuestionEditor') renderTeacherQuestionsList();
+    }
+
+    /* ---------- تسجيل دخول المعلم (باستخدام كلمات المخزنة) ---------- */
+    function loginTeacher() {
+      const pwd = document.getElementById('teacherLoginPwd').value.trim();
+      const arr = JSON.parse(localStorage.getItem(STORAGE.teacherPwds) || '[]');
+      if (arr.includes(pwd)) {
+        // إذا كانت بيانات المعلم محفوظة مسبقا نملأ الحقول
+        const infoRaw = localStorage.getItem(STORAGE.teacherInfo);
+        if (infoRaw) {
+          const info = JSON.parse(infoRaw);
+          document.getElementById('t_name').value = info.name || '';
+          document.getElementById('t_subject').value = info.subject || '';
+          if (info.image) { document.getElementById('t_image_preview').src = info.image; document.getElementById('t_image_preview').style.display = 'block'; }
+          document.getElementById('t_personal_pwd').value = info.personalPwd || '';
+          document.getElementById('teacherInfoMsg').innerText = 'بياناتك محفوظه مسبقاً — عدّلها إن أردت أو اضغط تخطى';
+        } else {
+          document.getElementById('t_name').value = '';
+          document.getElementById('t_subject').value = '';
+          document.getElementById('t_image_preview').style.display = 'none';
+          document.getElementById('t_personal_pwd').value = '';
+          document.getElementById('teacherInfoMsg').innerText = '';
+        }
+        document.getElementById('teacherLoginMsg').innerText = '';
+        goPage('teacherInfoPage');
+      } else {
+        document.getElementById('teacherLoginMsg').innerText = 'كلمة السر غير صحيحة';
+      }
+    }
+
+    /* ---------- معاينة صورة المعلم ---------- */
+    function previewTeacherImage(ev) {
+      const f = ev.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        document.getElementById('t_image_preview').src = e.target.result;
+        document.getElementById('t_image_preview').style.display = 'block';
+      };
+      reader.readAsDataURL(f);
+    }
+
+    /* ---------- حفظ بيانات المعلم ---------- */
+    function saveTeacherInfo() {
+      const info = {
+        name: document.getElementById('t_name').value.trim(),
+        subject: document.getElementById('t_subject').value.trim(),
+        image: document.getElementById('t_image_preview').src || '',
+        personalPwd: document.getElementById('t_personal_pwd').value
+      };
+      localStorage.setItem(STORAGE.teacherInfo, JSON.stringify(info));
+      document.getElementById('teacherWelcome').innerText = `مرحباً يا ${info.name || 'معلم'}`;
+      document.getElementById('teacherInfoMsg').innerText = 'تم حفظ بياناتك';
+      setTimeout(() => goPage('teacherMainPage'), 600);
+    }
+    function skipTeacherInfo() {
+      const infoRaw = localStorage.getItem(STORAGE.teacherInfo);
+      if (infoRaw) {
+        const info = JSON.parse(infoRaw);
+        document.getElementById('teacherWelcome').innerText = `مرحباً يا ${info.name || 'معلم'}`;
+        goPage('teacherMainPage');
+      } else {
+        alert('لا توجد بيانات محفوظة. يُفضل تعبئة الحقول وحفظها أولاً.');
+      }
+    }
+
+    /* ---------- تسجيل خروج ---------- */
+    function logout() { sessionStorage.removeItem('role'); goPage('rolePage'); }
+
+    /* ---------- الشرح (حفظ / تحميل) ---------- */
+    function saveLesson() {
+      const data = { text: document.getElementById('lesson_text').value, video: document.getElementById('lesson_video').value };
+      localStorage.setItem(STORAGE.lesson, JSON.stringify(data));
+      document.getElementById('lessonSaveMsg').innerText = 'تم حفظ الشرح';
+      setTimeout(() => document.getElementById('lessonSaveMsg').innerText = '', 1200);
+    }
+
+    /* ---------- الأسئلة: إضافة، عرض، مسح ---------- */
+    function getQuestions() { return JSON.parse(localStorage.getItem(STORAGE.questions) || '[]'); }
+    function setQuestions(arr) { localStorage.setItem(STORAGE.questions, JSON.stringify(arr)); }
+
+    function addQuestion() {
+      const text = document.getElementById('q_text').value.trim();
+      const opts = [
+        document.getElementById('q_opt1').value.trim(),
+        document.getElementById('q_opt2').value.trim(),
+        document.getElementById('q_opt3').value.trim(),
+        document.getElementById('q_opt4').value.trim()
+      ];
+      const correct = parseInt(document.getElementById('q_correct').value, 10);
+      const reason = document.getElementById('q_reason').value.trim();
+
+      if (!text) { alert('اكتب نص السؤال'); return; }
+      if (opts.some(o => !o)) { alert('اكتب كل الاختيارات'); return; }
+      if (!(correct >= 1 && correct <= 4)) { alert('حدد رقم الإجابة الصحيحة بين 1 و 4'); return; }
+
+      const arr = getQuestions();
+      arr.push({ text, choices: opts, correct, reason });
+      setQuestions(arr);
+      renderTeacherQuestionsList();
+      document.getElementById('q_text').value = '';
+      document.getElementById('q_opt1').value = '';
+      document.getElementById('q_opt2').value = '';
+      document.getElementById('q_opt3').value = '';
+      document.getElementById('q_opt4').value = '';
+      document.getElementById('q_correct').value = '1';
+      document.getElementById('q_reason').value = '';
+      alert('تم إضافة السؤال وحفظه محلياً');
+    }
+
+    function renderTeacherQuestionsList() {
+      const list = getQuestions();
+      const box = document.getElementById('teacherQuestionsList');
+      if (!box) return;
+      if (list.length === 0) { box.innerHTML = '<div class="small">لا توجد أسئلة بعد</div>'; return; }
+      box.innerHTML = list.map((q, idx) => `
+    <div style="padding:6px;border-bottom:1px dashed #dceefe">
+      <div><strong>س${idx + 1}:</strong> ${escapeHtml(q.text)}</div>
+      <div class="small" style="margin-top:4px">الاختيارات: ${q.choices.map((c, i) => `(${i + 1}) ${escapeHtml(c)}`).join(' , ')}</div>
+      <div class="small">الإجـابة الصحيحة: (${q.correct}) ${escapeHtml(q.choices[q.correct - 1] || '')}</div>
+      <div class="small">السبب: ${escapeHtml(q.reason || '')}</div>
+    </div>
+  `).join('');
+    }
+    function clearQuestions() { if (!confirm('هل تريد مسح كل الأسئلة؟')) return; setQuestions([]); renderTeacherQuestionsList(); }
+
+    /* ---------- عرض للطالب (شرح وأسئلة تفاعلية) ---------- */
+    function loadLessonForStudent() {
+      const data = JSON.parse(localStorage.getItem(STORAGE.lesson) || '{}');
+      const box = document.getElementById('studentLessonContent');
+      if (!data || (!data.text && !data.video)) { box.innerHTML = '<div class="small">لا يوجد شرح بعد.</div>'; return; }
+      let html = '';
+      if (data.text) html += `<div style="text-align:right">${escapeHtml(data.text).replace(/\n/g, '<br>')}</div>`;
+      if (data.video) {
+        const vid = data.video.trim();
+        if (vid.includes('youtube.com') || vid.includes('youtu.be')) {
+          let id = null;
+          if (vid.includes('youtu.be/')) id = vid.split('youtu.be/')[1].split(/[?&]/)[0];
+          else if (vid.includes('v=')) id = vid.split('v=')[1].split(/[?&]/)[0];
+          if (id) {
+            html += `<div style="margin-top:10px"><iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe></div>`;
+          } else {
+            html += `<div style="margin-top:10px"><a href="${escapeAttr(vid)}" target="_blank">رابط الفيديو</a></div>`;
+          }
+        } else {
+          html += `<div style="margin-top:10px"><a href="${escapeAttr(vid)}" target="_blank">رابط الفيديو / ملف</a></div>`;
+        }
+      }
+      box.innerHTML = html;
+    }
+
+    function loadQuestionsForStudent() {
+      const list = getQuestions();
+      const container = document.getElementById('studentQuestionsContainer');
+      container.innerHTML = '';
+      if (list.length === 0) { container.innerHTML = '<div class="small">لا توجد أسئلة حتى الآن.</div>'; return; }
+
+      list.forEach((q, idx) => {
+        const outer = document.createElement('div');
+        outer.style.border = '1px solid #ddd';
+        outer.style.padding = '10px';
+        outer.style.marginBottom = '10px';
+        outer.style.borderRadius = '8px';
+        let html = `<div style="text-align:right"><strong>السؤال ${idx + 1}:</strong> ${escapeHtml(q.text)}</div>`;
+        html += '<div style="text-align:right;margin-top:8px">';
+        q.choices.forEach((c, j) => {
+          html += `<div style="margin:6px 0"><label><input type="radio" name="ans${idx}" value="${j + 1}"> ${escapeHtml(c)}</label></div>`;
+        });
+        html += `</div><div id="feedback_${idx}" style="margin-top:8px;font-weight:700"></div>`;
+        html += `<div style="margin-top:8px"><button class="btn ghost" onclick="submitAnswer(${idx})">تحقق الإجابة</button></div>`;
+        outer.innerHTML = html;
+        container.appendChild(outer);
+      });
+    }
+
+    function submitAnswer(qIndex) {
+      const q = getQuestions()[qIndex];
+      const chosenEl = document.querySelector(`input[name="ans${qIndex}"]:checked`);
+      const fb = document.getElementById(`feedback_${qIndex}`);
+      if (!chosenEl) { fb.innerHTML = '<span style="color:#b71c1c">اختر إجابة أولا</span>'; return; }
+      const val = parseInt(chosenEl.value, 10);
+      if (val === q.correct) {
+        fb.innerHTML = `<span style="color:green">✅ صحيح! السبب: ${escapeHtml(q.reason)}</span>`;
+      } else {
+        const correctText = q.choices[q.correct - 1] || '';
+        fb.innerHTML = `<span style="color:red">❌ خطأ. الإجابة الصحيحة: ${escapeHtml(correctText)}<br>السبب: ${escapeHtml(q.reason)}</span>`;
+      }
+    }
+
+    /* ---------- لوحة الإدارة (8989) ---------- */
+    function goToAdminAuth() { goPage('adminAuthPage'); }
+    function enterAdmin() {
+      const v = document.getElementById('adminPwdInput').value.trim();
+      if (v === ADMIN_INTERNAL_PASSWORD) { loadAdminLists(); goPage('adminPage'); document.getElementById('adminAuthMsg').innerText = ''; }
+      else document.getElementById('adminAuthMsg').innerText = 'كلمة سر الإدارة خاطئة';
+    }
+
+    function adminGenerate(role) {
+      const len = parseInt(document.getElementById('admin_pwd_length').value || '8', 10);
+      const count = parseInt(document.getElementById('admin_pwd_count').value || '1', 10);
+      if (!(len >= 4 && len <= 12)) { alert('اختر طولاً بين 4 و 12'); return; }
+      if (!(count >= 1 && count <= 50)) { alert('كمية معقولة (1-50)'); return; }
+      const key = (role === 'teacher') ? STORAGE.teacherPwds : STORAGE.studentPwds;
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      for (let i = 0; i < count; i++) { arr.unshift(randomString(len)); }
+      localStorage.setItem(key, JSON.stringify(arr));
+      loadAdminLists();
+    }
+
+    function loadAdminLists() {
+      const t = JSON.parse(localStorage.getItem(STORAGE.teacherPwds) || '[]');
+      const s = JSON.parse(localStorage.getItem(STORAGE.studentPwds) || '[]');
+      const tBox = document.getElementById('adminTeacherList');
+      const sBox = document.getElementById('adminStudentList');
+      tBox.innerHTML = t.length ? t.map((p, idx) => `<div class="pwItem"><div>${p}</div><div><button onclick="copyPwd('teacher',${idx})">نسخ</button> <button onclick="deletePwd('teacher',${idx})">حذف</button></div></div>`).join('') : '<div class="small">لا توجد كلمات</div>';
+      sBox.innerHTML = s.length ? s.map((p, idx) => `<div class="pwItem"><div>${p}</div><div><button onclick="copyPwd('student',${idx})">نسخ</button> <button onclick="deletePwd('student',${idx})">حذف</button></div></div>`).join('') : '<div class="small">لا توجد كلمات</div>';
+    }
+
+    function adminClearAll() {
+      if (!confirm('مسح جميع قوائم كلمات السر؟')) return;
+      localStorage.setItem(STORAGE.teacherPwds, JSON.stringify([]));
+      localStorage.setItem(STORAGE.studentPwds, JSON.stringify([]));
+      loadAdminLists();
+    }
+
+    /* نسخ وحذف عناصر */
+    function copyPwd(role, idx) {
+      const key = (role === 'teacher') ? STORAGE.teacherPwds : STORAGE.studentPwds;
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      const txt = arr[idx] || '';
+      navigator.clipboard?.writeText(txt).then(() => alert('تم النسخ')).catch(() => prompt('انسخ يدوياً:', txt));
+    }
+    function deletePwd(role, idx) {
+      if (!confirm('حذف هذه الكلمة؟')) return;
+      const key = (role === 'teacher') ? STORAGE.teacherPwds : STORAGE.studentPwds;
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      arr.splice(idx, 1);
+      localStorage.setItem(key, JSON.stringify(arr));
+      loadAdminLists();
+    }
+
+    /* ---------- تسجيل دخول الطالب ---------- */
+    function loginStudent() {
+      const v = document.getElementById('studentPwdInput').value.trim();
+      const arr = JSON.parse(localStorage.getItem(STORAGE.studentPwds) || '[]');
+      if (arr.includes(v)) { document.getElementById('studentLoginMsg').innerText = ''; goPage('studentMainPage'); }
+      else document.getElementById('studentLoginMsg').innerText = 'كلمة السر غير صحيحة';
+    }
+
+    /* ---------- أدوات مساعدة ---------- */
+    function randomString(len) {
+      const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      let s = "";
+      for (let i = 0; i < len; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+      return s;
+    }
+    function escapeHtml(str) { if (!str) return ''; return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+    function escapeAttr(s) { return s ? s.replace(/"/g, '&quot;') : ''; }
+
+    /* ---------- تهيئة عند التحميل ---------- */
+    (function init() {
+      // عرض قوائم افتراضية داخل لوحة الإدارة عند التحميل
+      loadAdminLists();
+      // عرض الأسئلة في محرر المعلم إن وُجدت
+      renderTeacherQuestionsList();
+    })();
+  </script>
+</body>
+
+</html>
